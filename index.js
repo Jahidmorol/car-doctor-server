@@ -1,13 +1,13 @@
-const express = require('express')
+const express = require("express");
 const app = express();
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const cors = require('cors')
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const cors = require("cors");
 const port = process.env.PORT || 5000;
-require('dotenv').config()
+require("dotenv").config();
 
-// midleware 
-app.use(cors())
-app.use(express.json())
+// midleware
+app.use(cors());
+app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.USER_DB}:${process.env.PASS_DB}@cluster0.bu34nfl.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -17,7 +17,7 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
@@ -28,18 +28,30 @@ async function run() {
     // const database = client.db("sample_mflix");
     // const movies = database.collection("movies");
 
-    const serviceCollection = client.db('carDoctors').collection('services');
+    const serviceCollection = client.db("carDoctors").collection("services");
 
-    app.get('/services', async(req, res) => {
-        const cursor = serviceCollection.find();
-        const result = await cursor.toArray();
-        res.send(result)
-        // console.log(result);
-    })
+    app.get("/services", async (req, res) => {
+      const cursor = serviceCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+      // console.log(result);
+    });
+
+    app.get("/checkout/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const options = {
+        projection: { img: 1, title: 1, img: 1, price: 1 },
+      };
+      const result = await serviceCollection.findOne(query, options);
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -47,12 +59,10 @@ async function run() {
 }
 run().catch(console.dir);
 
-
-
-app.get('/', (req, res) => {
-    res.send('car doctor is running')
-})
+app.get("/", (req, res) => {
+  res.send("car doctor is running");
+});
 
 app.listen(port, () => {
-    console.log(`car doctor is running port ${port}`);
-})
+  console.log(`car doctor is running port ${port}`);
+});
