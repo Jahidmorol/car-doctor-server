@@ -29,6 +29,7 @@ async function run() {
     // const movies = database.collection("movies");
 
     const serviceCollection = client.db("carDoctors").collection("services");
+    const checkOutCollection = client.db("carDoctors").collection("checkouts");
 
     app.get("/services", async (req, res) => {
       const cursor = serviceCollection.find();
@@ -37,7 +38,7 @@ async function run() {
       // console.log(result);
     });
 
-    app.get("/checkout/:id", async (req, res) => {
+    app.get("/services/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const options = {
@@ -46,6 +47,47 @@ async function run() {
       const result = await serviceCollection.findOne(query, options);
       res.send(result);
     });
+
+    //---------------- checkOut ------------
+
+    app.post('/checkout', async (req, res)=> {
+      const order = req.body;
+      // console.log(order);
+      const result = await checkOutCollection.insertOne(order)
+      res.send(result)
+    })
+
+    // ---------------orederReviews------------
+    app.get('/orderreviews', async(req, res) => {
+      // console.log(req.query.email);
+      let query = {};
+      if(req.query?.email){
+        query = {email: req.query.email}
+      }
+      const result = await checkOutCollection.find(query).toArray();
+      res.send(result)
+    })
+
+    app.patch('/orderreviews/:id', async(req, res) => {
+      const id = req.params.id;
+      const body = req.body
+      const filter = {_id: new ObjectId(id)}
+      const approvedStatus = {
+        $set: {
+          status: body.status
+        },
+      };
+      const result = await checkOutCollection.updateOne(filter,approvedStatus)
+      res.send(result)
+
+    })
+
+    app.delete('/orderreviews/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await checkOutCollection.deleteOne(query)
+      res.send(result)
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
